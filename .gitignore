@@ -12,3 +12,6 @@ __pycache__
 *.csv
 *.db
 *.sqlite
+*.jsonl
+*.ipynb
+a.json

@@ -3,55 +3,33 @@ import csv
 import os
 import logging
 from datetime import datetime
+from project_logger import setup_project_logger
 
+logger = setup_project_logger("excel_extraction") # Initialize the logger with a module-specific name
 
-def setup_excel_extractor_logger():
+def _clean_text(text):
     """
-    Sets up a logger for the excel data extraction process,
-    outputting to a date-stamped file in 'data/logs' and to the console.
-
-    Returns:
-        logging.Logger: The configured logger instance.
+    Cleans common typographical characters like smart quotes and dashes.
+    Replaces them with their ASCII equivalents.
     """
-    # Define the log directory
-    LOG_DIR = 'data/logs'
-    os.makedirs(LOG_DIR, exist_ok=True) # Ensure the log directory exists
+    if text is None:
+        return None
+    text = str(text)
+    text = text.replace('’', "'") # Right single quotation mark
+    text = text.replace('‘', "'") # Left single quotation mark
+    text = text.replace('“', '"') # Left double quotation mark
+    text = text.replace('”', '"') # Right double quotation mark
+    text = text.replace('–', '-') # En dash
+    text = text.replace('—', '--') # Em dash (longer dash)
+    # Add more replacements here if other specific characters are found
+    return text.strip()
 
-    # Define the log file path with a date stamp
-    today_date = datetime.now().strftime("%Y-%m-%d")
-    LOG_FILE_PATH = os.path.join(LOG_DIR, f"excel_extraction_{today_date}.log")
-
-    # Get a logger instance
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO) # Set the minimum level for this logger
-
-    # Clear existing handlers to prevent duplicate messages if script is run multiple times in a session
-    if logger.handlers:
-        for handler in logger.handlers[:]:
-            logger.removeHandler(handler)
-
-    # Create a file handler for detailed logs
-    file_handler = logging.FileHandler(LOG_FILE_PATH)
-    file_handler.setLevel(logging.DEBUG) # Log all messages (DEBUG and above) to file
-    file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    file_handler.setFormatter(file_formatter)
-    logger.addHandler(file_handler)
-
-    # Create a console handler for general info/errors (e.g., what was previously 'print')
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO) # Only show INFO and above on console
-    console_formatter = logging.Formatter('%(levelname)s: %(message)s')
-    console_handler.setFormatter(console_formatter)
-    logger.addHandler(console_handler)
-
-    return logger
-
-logger = setup_excel_extractor_logger() # Initialize the logger when the script starts
 
 def extract_data_from_single_sheet(workbook, sheet_name):
     """
     Extracts article titles, URLs, and source websites from a single sheet
     in an Excel workbook, also identifying if a title cell is highlighted.
+    Applies text cleaning to titles and URLs.
 
     Args:
         workbook (openpyxl.workbook.workbook.Workbook): The loaded openpyxl workbook object.
@@ -79,8 +57,8 @@ def extract_data_from_single_sheet(workbook, sheet_name):
             title_cell = sheet.cell(row=row_idx, column=col_idx + 1)
             url_cell = sheet.cell(row=row_idx, column=col_idx + 2)
 
-            title = title_cell.value
-            url = url_cell.value
+            title = _clean_text(title_cell.value) # Apply cleaning here
+            url = _clean_text(url_cell.value)     # Apply cleaning here
 
             if title is None and url is None:
                 # If both title and URL are empty, assume no more articles in this column
