@@ -7,4 +7,8 @@ __pycache__
 *.log
 *.pyc
 *.secrets
-data/
+.xls
+*.xlsx
+*.csv
+*.db
+*.sqlite

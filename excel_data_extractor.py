@@ -4,8 +4,6 @@ import os
 import logging
 from datetime import datetime
 
-global logger
-logger = None  # Initialize logger as a global variable
 
 def setup_excel_extractor_logger():
     """
@@ -47,6 +45,8 @@ def setup_excel_extractor_logger():
     logger.addHandler(console_handler)
 
     return logger
+
+logger = setup_excel_extractor_logger() # Initialize the logger when the script starts
 
 def extract_data_from_single_sheet(workbook, sheet_name):
     """
@@ -205,6 +205,5 @@ def process_files_in_directory(daily_trackers_folder, titles_and_urls_folder):
 if __name__ == "__main__":
     daily_trackers_folder = 'data/daily_trackers'
     titles_and_urls_folder = 'data/titles_and_urls'
-    logger = setup_excel_extractor_logger() # Initialize the logger when the script starts
-
+    
     process_files_in_directory(daily_trackers_folder, titles_and_urls_folder)
