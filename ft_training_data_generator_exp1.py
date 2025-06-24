@@ -30,8 +30,8 @@ def _format_to_json(titles_and_selected_pairs):
         title_str = str(title).strip() if title is not None else ""
         if not title_str: # Skip empty titles
             continue
-        user_content_titles.append(f"{i+1}: {title_str}")
-        assistant_content_outputs.append(f"{i+1}: {selected.strip()}")
+        user_content_titles.append(f"{i+1}. {title_str}")
+        assistant_content_outputs.append(f"{i+1}. {title_str} : {selected.strip()}")
 
     if not user_content_titles: # If all titles were empty/invalid
         return None
@@ -41,7 +41,7 @@ def _format_to_json(titles_and_selected_pairs):
         f"Titles:\n{'\n'.join(user_content_titles)}\n"
     )
 
-    assistant_message_content = f"Output:\n{'\n'.join(assistant_content_outputs)}"
+    assistant_message_content = f"{'\n'.join(assistant_content_outputs)}"
 
     return {
         "messages": [

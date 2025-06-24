@@ -128,7 +128,7 @@ def process_csv_for_finetuning(input_csv_path, all_train_data, all_test_data, al
     logger.info(f"Finished processing data from '{input_csv_path}'.")
 
 
-def generate_finetuning_data(titles_and_urls_folder, output_finetuning_dir):
+def generate_finetuning_data_for_directory(titles_and_urls_folder, output_finetuning_dir):
     """
     Processes all CSV files in the specified input directory to generate fine-tuning data
     for Experiment 2, and then writes the combined train, test, and validate files.
@@ -188,4 +188,4 @@ if __name__ == "__main__":
     titles_and_urls_folder = os.path.join('data', 'titles_and_urls')
     output_finetuning_dir = os.path.join('data', 'finetuning_data')
     
-    generate_finetuning_data(titles_and_urls_folder, output_finetuning_dir)
+    generate_finetuning_data_for_directory(titles_and_urls_folder, output_finetuning_dir)

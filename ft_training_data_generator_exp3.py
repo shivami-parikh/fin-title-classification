@@ -40,7 +40,7 @@ def _format_to_json(title, selected):
         ]
     }
 
-def process_csv_for_finetuning_exp3(input_csv_path, all_train_data, all_test_data, all_validate_data):
+def process_csv_for_finetuning(input_csv_path, all_train_data, all_test_data, all_validate_data):
     """
     Processes a single CSV file, balances the "Selected" and "Not Selected" groups,
     and then splits the combined data into train, test, and validation sets.
@@ -145,7 +145,7 @@ def process_csv_for_finetuning_exp3(input_csv_path, all_train_data, all_test_dat
     logger.info(f"Finished processing data from '{input_csv_path}'.")
 
 
-def generate_finetuning_data_for_directory_exp3(titles_and_urls_folder, output_finetuning_dir):
+def generate_finetuning_data_for_directory(titles_and_urls_folder, output_finetuning_dir):
     """
     Processes all CSV files in the specified input directory to generate fine-tuning data
     for Experiment 3, and then writes the combined train, test, and validate files.
@@ -173,7 +173,7 @@ def generate_finetuning_data_for_directory_exp3(titles_and_urls_folder, output_f
         input_csv_file_path = os.path.join(titles_and_urls_folder, csv_file_name)
         logger.info(f"\n--- Processing CSV for Exp3: '{csv_file_name}' ---")
         # Pass the accumulating lists to the processing function
-        process_csv_for_finetuning_exp3(input_csv_file_path, all_train_data, all_test_data, all_validate_data)
+        process_csv_for_finetuning(input_csv_file_path, all_train_data, all_test_data, all_validate_data)
         logger.info(f"--- Finished processing CSV for Exp3: '{csv_file_name}' ---\n")
 
     logger.info("All relevant CSV files processed for fine-tuning data generation (Experiment 3).")
@@ -205,4 +205,4 @@ if __name__ == "__main__":
     titles_and_urls_folder = os.path.join('data', 'titles_and_urls')
     output_finetuning_dir = os.path.join('data', 'finetuning_data')
     
-    generate_finetuning_data_for_directory_exp3(titles_and_urls_folder, output_finetuning_dir)
+    generate_finetuning_data_for_directory(titles_and_urls_folder, output_finetuning_dir)
