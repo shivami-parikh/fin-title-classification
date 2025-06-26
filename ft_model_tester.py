@@ -5,23 +5,16 @@ import os
 import time
 import asyncio
 from openai import AsyncOpenAI, APIError, RateLimitError, APITimeoutError # Import AsyncOpenAI
-from dotenv import load_dotenv
 import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, classification_report
-from project_logger import setup_project_logger
 
 # Initialize the logger for this module
+from project_logger import setup_project_logger
 logger = setup_project_logger("finetuning_data_generator")
 
-# Initialize AsyncOpenAI client
+# Load environment variables
+from dotenv import load_dotenv
 load_dotenv()
-client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"), timeout=30.0) # Set client-level timeout
-
-# Configuration for batch processing and retries
-BATCH_SIZE = 100  # Number of records to process before saving to CSV
-CONCURRENT_REQUESTS = 10 # Number of API requests to make concurrently within a batch
-MAX_RETRIES = 5   # Maximum number of retries for an API call per request
-RETRY_DELAY_SECONDS = 5 # Initial delay for retries (will increase exponentially)
 
 def extract_from_jsonl(file_path):
     """
@@ -77,7 +70,7 @@ def extract_from_jsonl(file_path):
 
     return extracted_data
 
-async def chat(message):
+async def chat(message, model):
     """
     Sends a message to the OpenAI chat model asynchronously and returns the response.
     Includes robust error handling and retry mechanism for API calls.
@@ -91,7 +84,7 @@ async def chat(message):
     for attempt in range(MAX_RETRIES):
         try:
             response = await client.chat.completions.create(
-                model="ft:gpt-4o-mini-2024-07-18:utilizeai:title-classification:BmLI1fnt",
+                model=model,
                 stream=True,
                 messages=[
                     {
@@ -200,7 +193,7 @@ def load_existing_results(output_csv_file):
             return []
     return existing_data
 
-async def run_tests(title_selected_dict, output_csv_file):
+async def run_tests(model, title_selected_dict, output_csv_file):
     """
     Runs tests by calling the chat model for each item concurrently and collecting results.
     Includes checkpointing to save data periodically and resumption logic.
@@ -235,7 +228,7 @@ async def run_tests(title_selected_dict, output_csv_file):
             actual_output = item['assistant_response']
 
             logger.info(f"Processing item {original_index + 1}/{len(title_selected_dict)}...")
-            model_output = await chat(input_content) # Await the async chat function
+            model_output = await chat(input_content, model)
 
             if model_output is None:
                 logger.error(f"API call failed for item {original_index + 1} after all retries.")
@@ -281,14 +274,71 @@ async def run_tests(title_selected_dict, output_csv_file):
 
     return all_processed_results
 
-def generate_classification_metrics_report(output_csv_file):
+def read_csv_file(file_path)-> list:
+    """
+    Reads a CSV file and returns its content as a list of dictionaries.
+
+    Args:
+        file_path (str): The path to the CSV file.
+
+    Returns:
+        list: A list of dictionaries representing the rows in the CSV file.
+    """
+    try:
+        with open(file_path, mode='r', newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            return [row for row in reader]
+    except FileNotFoundError:
+        logger.error(f"File '{file_path}' not found.")
+        return []
+    except Exception as e:
+        logger.error(f"An error occurred while reading the CSV file: {e}")
+        return []
+
+def generate_classification_metrics_report(output_csv_file, experiment_number=2):
     # Step 1: Load the CSV file
-    df = pd.read_csv(output_csv_file)
+    
+    df = pd.DataFrame()
+    
+    if experiment_number == 1:
+        rows = read_csv_file(output_csv_file)
+        for x, row in enumerate(rows):
+            actual_output_list = row.get('actual_output', '').strip().split('\n')
+            model_output_list = row.get('model_output', '').strip().split('\n')
+            
+            for y, (actual_output_text, model_output_text) in enumerate(zip(actual_output_list, model_output_list)):
+                
+                if ":" not in actual_output_text or ":" not in model_output_text:
+                    continue
+                
+                actual_title = actual_output_text.rsplit(":", 1)[0].strip()
+                actual_output = actual_output_text.rsplit(":", 1)[1].strip()
+                model_title = model_output_text.rsplit(":", 1)[0].strip()
+                model_output = model_output_text.rsplit(":", 1)[1].strip()
+                
+                if actual_title == model_title:
+                    new_df_row = pd.DataFrame({
+                        'input': actual_title,
+                        'actual_output': actual_output,
+                        'model_output': model_output
+                    }, index=[0])
+                    df = pd.concat([df, new_df_row], ignore_index=True)
+                else:
+                    logger.warning(f"Title mismatch in row {x+1}, title {y+1}")
+            
+    if df.empty:
+        df = pd.read_csv(output_csv_file)
     
     # Normalize labels
+    before_count = len(df)
+    df = df[df['actual_output'].isin(["Selected", "Not Selected"])]
+    df = df[df['model_output'].isin(["Selected", "Not Selected"])]
+    after_count = len(df)
+    logger.info(f"Filtered data: {before_count} -> {after_count} rows after filtering for 'Selected' and 'Not Selected' labels.")
+    
     y_true = df['actual_output'].str.strip()
     y_pred = df['model_output'].str.strip()
-
+    
     # Step 3: Compute metrics
     accuracy = accuracy_score(y_true, y_pred)
     precision = precision_score(y_true, y_pred, pos_label='Selected')
@@ -306,32 +356,75 @@ def generate_classification_metrics_report(output_csv_file):
     logger.info(f"Confusion Matrix:\n{conf_matrix}")
     logger.info(f"\nClassification Report:\n{class_report}")
 
-
-# --- How to implement and run the code ---
-if __name__ == "__main__":
-    file_name = "data/finetuning_data/test_exp2.jsonl"
-    csv_output_file = "data/testing_data/test_exp2_output.csv"
-
-    # Create the directory if it doesn't exist
-    output_dir = os.path.dirname(csv_output_file)
-    if output_dir and not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-        logger.info(f"Created output directory: '{output_dir}'")
-
-    # Load the JSONL file and extract data
-    title_selected_dict = extract_from_jsonl(file_name)
-    if not title_selected_dict:
-        logger.error(f"No data extracted from '{file_name}'. Please check the file content or path.")
-        exit(1)
-    logger.info(f"Total items to consider from source: {len(title_selected_dict)}")
+def main(experinent_number: int, 
+         run_experiment_flag:bool=False,
+         generate_metrics_flag:bool=False
+        ) -> bool:
+    """Main function to execute the script."""
+    logger.info("Script started execution.")
     
-    # Run the asynchronous main function
-    asyncio.run(run_tests(title_selected_dict, csv_output_file))
-    final_count_after_run = len(load_existing_results(csv_output_file))
-    logger.info(f"Total items processed and saved in '{csv_output_file}': {final_count_after_run}")
+    if experinent_number not in [1, 2, 3]:
+        logger.error(f"Invalid experiment number: {experinent_number}. Must be 1, 2, or 3.")
+        return False
     
-    # Generate classification metrics report
-    generate_classification_metrics_report(csv_output_file)
-    logger.info("Classification metrics report generated.")
+    if experinent_number == 1:
+        model = "ft:gpt-4o-mini-2024-07-18:utilizeai:title-classification-bulk:BmdwSpca"
+        file_name = "data/finetuning_data/test_exp1.jsonl"
+        csv_output_file = "data/testing_data/test_exp1_output.csv"
+    elif experinent_number == 2:
+        model = "ft:gpt-4o-mini-2024-07-18:utilizeai:title-classification:BmLI1fnt"
+        file_name = "data/finetuning_data/test_exp2.jsonl"
+        csv_output_file = "data/testing_data/test_exp2_output.csv"
+    elif experinent_number == 3:
+        model = "ft:gpt-4o-mini-2024-07-18:utilizeai:title-classification-balanced:Bmcz4fNK"
+        file_name = "data/finetuning_data/test_exp3.jsonl"
+        csv_output_file = "data/testing_data/test_exp3_output.csv"
+
+    if run_experiment_flag:
+        # Create the directory if it doesn't exist
+        output_dir = os.path.dirname(csv_output_file)
+        if output_dir and not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+            logger.info(f"Created output directory: '{output_dir}'")
+        # Load the JSONL file and extract data
+        title_selected_dict = extract_from_jsonl(file_name)
+        if not title_selected_dict:
+            logger.error(f"No data extracted from '{file_name}'. Please check the file content or path.")
+            exit(1)
+        logger.info(f"Total items to consider from source: {len(title_selected_dict)}")
+        
+        # Run the asynchronous api call function    
+        logger.info(f"Running tests with model '{model}' on {len(title_selected_dict)} items.")
+        asyncio.run(run_tests(model, title_selected_dict, csv_output_file))
+        final_count_after_run = len(load_existing_results(csv_output_file))
+        logger.info(f"Total items processed and saved in '{csv_output_file}': {final_count_after_run}")
+    
+    if generate_metrics_flag:
+        # Generate classification metrics report
+        generate_classification_metrics_report(csv_output_file, experiment_number)
+        logger.info("Classification metrics report generated.")
     
     logger.info("Script finished execution.")
+    
+# --- How to implement and run the code ---
+if __name__ == "__main__":
+    
+    # Variable to control the experiment
+    experiment_number = 1
+    run_experiment_flag = False
+    generate_metrics_flag = True
+    
+    # Run the main function
+    if run_experiment_flag:
+        # Initialize AsyncOpenAI client
+        client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"), timeout=30.0) # Set client-level timeout
+
+        # Configuration for batch processing and retries
+        BATCH_SIZE = 100  # Number of records to process before saving to CSV
+        CONCURRENT_REQUESTS = 10 # Number of API requests to make concurrently within a batch
+        MAX_RETRIES = 5   # Maximum number of retries for an API call per request
+        RETRY_DELAY_SECONDS = 5 # Initial delay for retries (will increase exponentially)
+    
+    main(experiment_number, run_experiment_flag, generate_metrics_flag)
+    
+    pass
