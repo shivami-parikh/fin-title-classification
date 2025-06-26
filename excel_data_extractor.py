@@ -22,6 +22,15 @@ def _clean_text(text):
     text = text.replace('–', '-') # En dash
     text = text.replace('—', '--') # Em dash (longer dash)
     text = text.replace(' ', ' ') # Non-breaking space to regular space
+    text = text.replace('\n', ' ') # Remove newlines
+    text = text.replace('\r', '') # Remove carriage returns
+    text = text.replace('\t', ' ') # Replace tabs with spaces
+    text = text.replace('â€', "'") # Common mojibake for apostrophe/right single quote
+    text = text.replace('â€œ', '"') # Common mojibake for left double quote
+    text = text.replace('â€�', '"') # Common mojibake for right double quote
+    text = text.replace('â€“', '-') # Common mojibake for en dash
+    text = text.replace('â€”', '--') # Common mojibake for em dash
+    text = text.replace('…', '...') # Ellipsis to three dots
     # Add more replacements here if other specific characters are found
     return text.strip()
 

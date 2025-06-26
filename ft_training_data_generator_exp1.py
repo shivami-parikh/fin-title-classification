@@ -5,7 +5,7 @@ import random
 from project_logger import setup_project_logger
 
 # Initialize the logger for this module
-logger = setup_project_logger("finetuning_data_generator")
+logger = setup_project_logger("finetuning_data_generator_exp1")
 
 def _format_to_json(titles_and_selected_pairs):
     """

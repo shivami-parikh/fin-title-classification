@@ -10,7 +10,6 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 
 # Initialize the logger for this module
 from project_logger import setup_project_logger
-logger = setup_project_logger("finetuning_data_generator")
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -370,15 +369,15 @@ def main(experinent_number: int,
     if experinent_number == 1:
         model = "ft:gpt-4o-mini-2024-07-18:utilizeai:title-classification-bulk:BmdwSpca"
         file_name = "data/finetuning_data/test_exp1.jsonl"
-        csv_output_file = "data/testing_data/test_exp1_output.csv"
+        csv_output_file = "data/model_testing_output/test_exp1_output.csv"
     elif experinent_number == 2:
         model = "ft:gpt-4o-mini-2024-07-18:utilizeai:title-classification:BmLI1fnt"
         file_name = "data/finetuning_data/test_exp2.jsonl"
-        csv_output_file = "data/testing_data/test_exp2_output.csv"
+        csv_output_file = "data/model_testing_output/test_exp2_output.csv"
     elif experinent_number == 3:
         model = "ft:gpt-4o-mini-2024-07-18:utilizeai:title-classification-balanced:Bmcz4fNK"
         file_name = "data/finetuning_data/test_exp3.jsonl"
-        csv_output_file = "data/testing_data/test_exp3_output.csv"
+        csv_output_file = "data/model_testing_output/test_exp3_output.csv"
 
     if run_experiment_flag:
         # Create the directory if it doesn't exist
@@ -415,6 +414,7 @@ if __name__ == "__main__":
     generate_metrics_flag = True
     
     # Run the main function
+    logger = setup_project_logger("ft_model_tester_exp{experiment_number}")
     if run_experiment_flag:
         # Initialize AsyncOpenAI client
         client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"), timeout=30.0) # Set client-level timeout
@@ -426,5 +426,3 @@ if __name__ == "__main__":
         RETRY_DELAY_SECONDS = 5 # Initial delay for retries (will increase exponentially)
     
     main(experiment_number, run_experiment_flag, generate_metrics_flag)
-    
-    pass
