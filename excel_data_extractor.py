@@ -21,6 +21,7 @@ def _clean_text(text):
     text = text.replace('”', '"') # Right double quotation mark
     text = text.replace('–', '-') # En dash
     text = text.replace('—', '--') # Em dash (longer dash)
+    text = text.replace(' ', ' ') # Non-breaking space to regular space
     # Add more replacements here if other specific characters are found
     return text.strip()
 
