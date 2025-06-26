@@ -37,7 +37,7 @@ def _format_to_json(titles_and_selected_pairs):
         return None
 
     user_message_content = (
-        "You are an analyst with a deep understanding of the banking business and you support financial institutions in scanning the universe of disruptive financial innovations and places them in context, to drive strategy. Your job is to go through news titles and decide whether it should be selected or not for your target audience - banker or strategy executive. You are given a news title and you need to decide if it should be selected or not. The input will be under Title section and the output should be under Output section. The output must be one of the two values: Selected or Not Selected.\n"
+        "You are an analyst with a deep understanding of the banking business and you support financial institutions in scanning the universe of disruptive financial innovations and places them in context, to drive strategy. Your job is to go through news titles and decide whether it should be selected or not for your target audience - banker or strategy executive. You are given a list of news titles and for each news title, you need to decide if it should be selected or not. The input will a list of news titles and will be provided under Titles section and the output format should be news title and decision (Selected or Not Selected) and should be provided under Output section. The output must be title and one of the two values: 'Selected' or 'Not Selected'.\n"
         f"Titles:\n{'\n'.join(user_content_titles)}\n"
     )
 

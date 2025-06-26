@@ -26,7 +26,7 @@ def _format_to_json(title, selected):
 
     # Construct the user message content with a single title
     user_message_content = (
-        "You are an analyst with a deep understanding of the banking business and you support financial institutions in scanning the universe of disruptive financial innovations and places them in context, to drive strategy. Your job is to go through news titles and decide whether it should be selected or not for your target audience - banker or strategy executive. You are given a news title and you need to decide if it should be selected or not. The input will be under Title section and the output should be under Output section. The output must be one of the two values: Selected or Not Selected. "
+        "You are an analyst with a deep understanding of the banking business and you support financial institutions in scanning the universe of disruptive financial innovations and places them in context, to drive strategy. Your job is to go through news titles and decide whether it should be selected or not for your target audience - banker or strategy executive. You are given a news title and you need to decide if it should be selected or not. The input will be under Title section and the output should be under Output section. The output must be one of the two values: 'Selected' or 'Not Selected'. "
         f"Title: {title_str}"
     )
 
