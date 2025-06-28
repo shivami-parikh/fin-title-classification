@@ -16,3 +16,4 @@ __pycache__
 *.ipynb
 a.json
 .vscode
+old_code/
