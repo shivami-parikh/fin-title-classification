@@ -1,7 +1,10 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import logging
 load_dotenv()
+
+LOGGING_LEVEL = logging.DEBUG
 
 api_key=os.getenv("OPENAI_API_KEY")
 PROJECT_ROOT = Path(__file__).resolve().parent

@@ -1,7 +1,7 @@
 import logging
 import os
 from datetime import datetime
-from config import LOGS_DIR
+from config import LOGS_DIR, LOGGING_LEVEL
 
 def setup_project_logger(module_name):
     """
@@ -23,7 +23,7 @@ def setup_project_logger(module_name):
 
     # Get a logger instance
     logger = logging.getLogger(module_name)
-    logger.setLevel(logging.INFO) # Set the minimum level for this logger
+    logger.setLevel(logging.DEBUG) # Set the minimum level for this logger
 
     # Clear existing handlers to prevent duplicate messages if script is run multiple times in a session
     if logger.handlers:
@@ -32,7 +32,7 @@ def setup_project_logger(module_name):
 
     # Create a file handler for detailed logs
     file_handler = logging.FileHandler(LOG_FILE_PATH)
-    file_handler.setLevel(logging.DEBUG) # Log all messages (DEBUG and above) to file
+    file_handler.setLevel(LOGGING_LEVEL) # Log all messages (DEBUG and above) to file
     file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(file_formatter)
     logger.addHandler(file_handler)
