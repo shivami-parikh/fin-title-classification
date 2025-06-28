@@ -12,7 +12,7 @@ PROCESSED_DATA_DIR = DATA_DIR / "processed"
 DATA_FOR_FT_DIR = DATA_DIR / "data_for_ft"
 PROMPTS_DIR = PROJECT_ROOT / "prompts"
 MODEL_TESTING_OUTPUT_DIR = DATA_DIR / "model_testing_output"
-LOGS_DIR = PROJECT_ROOT / "logs"
+LOGS_DIR = DATA_DIR / "logs"
 
 # Ensure directories exist (optional, but good practice for project setup)
 DATA_DIR.mkdir(exist_ok=True)

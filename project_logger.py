@@ -1,6 +1,7 @@
 import logging
 import os
 from datetime import datetime
+from config import LOGS_DIR
 
 def setup_project_logger(module_name):
     """
@@ -14,12 +15,11 @@ def setup_project_logger(module_name):
         logging.Logger: The configured logger instance.
     """
     # Define the log directory
-    LOG_DIR = 'data/logs'
-    os.makedirs(LOG_DIR, exist_ok=True) # Ensure the log directory exists
+    os.makedirs(LOGS_DIR, exist_ok=True) # Ensure the log directory exists
 
     # Define the log file path with a date stamp
     today_date = datetime.now().strftime("%Y-%m-%d")
-    LOG_FILE_PATH = os.path.join(LOG_DIR, f"{module_name}_{today_date}.log")
+    LOG_FILE_PATH = os.path.join(LOGS_DIR, f"{module_name}_{today_date}_{datetime.now().strftime('%H-%M-%S')}.log")
 
     # Get a logger instance
     logger = logging.getLogger(module_name)

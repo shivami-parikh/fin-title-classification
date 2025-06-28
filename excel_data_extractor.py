@@ -2,8 +2,9 @@ import openpyxl
 import csv
 import os
 import logging
-from datetime import datetime
+from datetime import datetime, date
 from project_logger import setup_project_logger
+from config import RAW_DATA_DIR, PROCESSED_DATA_DIR
 
 logger = setup_project_logger("excel_extraction") # Initialize the logger with a module-specific name
 
@@ -33,7 +34,6 @@ def _clean_text(text):
     text = text.replace('…', '...') # Ellipsis to three dots
     # Add more replacements here if other specific characters are found
     return text.strip()
-
 
 def extract_data_from_single_sheet(workbook, sheet_name):
     """
@@ -130,9 +130,12 @@ def process_all_sheets_and_write_to_csv(excel_file_path, output_csv_file_path):
             output_dir = os.path.dirname(output_csv_file_path)
             os.makedirs(output_dir, exist_ok=True)
             
-            with open(output_csv_file_path, 'w', newline='', encoding='utf-8') as csvfile:
+            file_exists = os.path.isfile(output_csv_file_path)
+            
+            with open(output_csv_file_path, 'a', newline='', encoding='utf-8') as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=csv_fieldnames)
-                writer.writeheader() # Write the header row
+                if not file_exists:
+                    writer.writeheader() # Write the header row
                 writer.writerows(all_extracted_data) # Write all the data rows
             logger.info(f"\nSuccessfully consolidated data from all sheets and wrote to '{output_csv_file_path}'")
             logger.info(f"Total entries written: {len(all_extracted_data)}")
@@ -142,19 +145,18 @@ def process_all_sheets_and_write_to_csv(excel_file_path, output_csv_file_path):
     else:
         logger.warning("\nNo data extracted from any sheet to write to CSV.")
 
-def process_files_in_directory(daily_trackers_folder, titles_and_urls_folder):
+def process_files_in_directory(daily_trackers_folder=RAW_DATA_DIR, processed_data_folder=PROCESSED_DATA_DIR):
     """
     Processes all Excel files in the specified directory and writes
     the extracted data to corresponding CSV files.
 
     Args:
         daily_trackers_folder (str): The path to the folder containing daily tracker Excel files.
-        titles_and_urls_folder (str): The path to the folder where output CSV files will be saved.
+        processed_data_folder (str): The path to the folder where output CSV files will be saved.
     """
     # Ensure the output directory exists
-    os.makedirs(titles_and_urls_folder, exist_ok=True)
-    logger.info(f"Ensured output directory '{titles_and_urls_folder}' exists.")
-
+    os.makedirs(processed_data_folder, exist_ok=True)
+    logger.info(f"Ensured output directory '{processed_data_folder}' exists.")
 
     # List all files in the daily_trackers folder
     excel_files = [f for f in os.listdir(daily_trackers_folder) if f.endswith('.xlsx')]
@@ -163,23 +165,12 @@ def process_files_in_directory(daily_trackers_folder, titles_and_urls_folder):
         logger.warning(f"No Excel files found in '{daily_trackers_folder}'. Please check the path and file extensions.")
         return
 
+    today_date = date.today()
     for excel_file_name in excel_files:
         excel_file_path = os.path.join(daily_trackers_folder, excel_file_name)
 
-        # Extract month from filename (e.g., "Daily_Tracker_March_2025.xlsx" -> "March_2025")
-        try:
-            parts = excel_file_name.replace('.xlsx', '').split('_')
-            if len(parts) >= 4:
-                month_year_part = f"{parts[2]}_{parts[3]}"
-            else:
-                month_year_part = excel_file_name.replace('.xlsx', '')
-                logger.warning(f"Could not parse month/year from '{excel_file_name}'. Using full filename for output.")
-        except Exception as e:
-            month_year_part = excel_file_name.replace('.xlsx', '')
-            logger.error(f"Error parsing filename '{excel_file_name}': {e}. Using full filename for output.", exc_info=True)
-
-        output_csv_file_name = f"titles_and_urls_{month_year_part}.csv"
-        output_csv_file_path = os.path.join(titles_and_urls_folder, output_csv_file_name)
+        output_csv_file_name = f"processed_{today_date.strftime('%Y%m%d')}.csv"
+        output_csv_file_path = os.path.join(processed_data_folder, output_csv_file_name)
 
         logger.info(f"\n--- Processing '{excel_file_name}' ---")
         process_all_sheets_and_write_to_csv(excel_file_path, output_csv_file_path)
@@ -191,7 +182,4 @@ def process_files_in_directory(daily_trackers_folder, titles_and_urls_folder):
         
 # --- How to use the code ---
 if __name__ == "__main__":
-    daily_trackers_folder = 'data/daily_trackers'
-    titles_and_urls_folder = 'data/titles_and_urls'
-    
-    process_files_in_directory(daily_trackers_folder, titles_and_urls_folder)
+    process_files_in_directory()
