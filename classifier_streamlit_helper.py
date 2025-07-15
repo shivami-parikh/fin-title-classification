@@ -134,7 +134,7 @@ def read_from_db():
         if df.empty:
             st.warning("No history found in the database.")
         else:
-            st.subheader("Titles from Database:")
+            st.subheader("Articles from Database:")
             st.dataframe(df, use_container_width=True, hide_index=True)
             st.markdown("---")
             

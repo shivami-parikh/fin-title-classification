@@ -30,7 +30,7 @@ def start_page():
     if 'is_saved' not in st.session_state:
         st.session_state['is_saved'] = False
 
-    st.title("AI-Powered Title Curation")    
+    st.title("AI-Powered Article Curation")    
 
     # --- 1. User uploads an Excel file and triggers extraction ---
     st.header("1. Upload Excel File")
@@ -53,13 +53,13 @@ def start_page():
             if st.button(f"Extract '{uploaded_file.name}'",
                          key="extract_button_new",
                          disabled=st.session_state['classification_completed']):
-                with st.spinner(f"Extracting titles from {uploaded_file.name}..."):
+                with st.spinner(f"Extracting articles from {uploaded_file.name}..."):
                     extraction_success = save_uploaded_file_and_extract(uploaded_file)
                     if extraction_success:
                         st.session_state['extracted_file_name'] = uploaded_file.name
                         st.session_state['processed_df'] = pd.DataFrame()
                         st.session_state['edited_df'] = pd.DataFrame()
-                        st.success("You can now classify the titles.")
+                        st.success("You can now classify the articles.")
                     else:
                         st.error("Data extraction failed.")
         else:
@@ -67,7 +67,7 @@ def start_page():
             if st.button(f"Re-extract '{uploaded_file.name}'",
                          key="extract_button_re",
                          disabled=st.session_state['classification_completed']):
-                with st.spinner(f"Re-extracting titles from {uploaded_file.name}..."):
+                with st.spinner(f"Re-extracting articles from {uploaded_file.name}..."):
                     extraction_success = save_uploaded_file_and_extract(uploaded_file)
                     if extraction_success:
                         st.session_state['extracted_file_name'] = uploaded_file.name
@@ -80,7 +80,7 @@ def start_page():
 def handle_input_and_classify():
     # --- 2. User selects model and report options, then triggers classification ---
     if st.session_state['extracted_file_name'] is not None and not st.session_state['reset_triggered']:
-        st.header("2. Classify Titles")
+        st.header("2. Classify Articles")
 
         col1, col2 = st.columns(2)
         with col1:
@@ -274,7 +274,7 @@ def display_results():
 
         st.subheader("Analyze and Edit Data")
 
-        search_term = st.text_input("Search in Titles:", "")
+        search_term = st.text_input("Search in Articles:", "")
 
         user_filter = []
         if st.session_state['is_test_selected']: # Only show user filter if "Evaluate" was selected
@@ -307,7 +307,7 @@ def display_results():
         if st.session_state['is_test_selected'] and COLUMN_NAMES[1] in view_df.columns:
             display_columns.insert(1, COLUMN_NAMES[1])
 
-        st.subheader("Classified Titles")
+        st.subheader("Classified Articles")
 
         edited_view = st.data_editor(
             view_df[display_columns],
@@ -324,7 +324,7 @@ def display_results():
 def save_data():    
     # --- 4. Save Edited Data ---
     if st.session_state['classification_completed'] and not st.session_state['edited_df'].empty and not st.session_state['reset_triggered']:
-        st.header("4. Save Classified Titles")
+        st.header("4. Save Classified Articles")
         
         download_columns = [COLUMN_NAMES[0], COLUMN_NAMES[2]]
         
@@ -344,7 +344,7 @@ def save_data():
             data=excel_data_bytes,
             file_name="classified_and_edited_data.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            help="Click to download the edited titles and classified data as an Excel file."
+            help="Click to download the edited articles and classified data as an Excel file."
         )
 
         st.markdown("---")
@@ -354,7 +354,7 @@ def save_data():
 
 
 def classifier_app_logic():
-    tab1, tab2 = st.tabs(["Title Curation", "Curated Titles"])
+    tab1, tab2 = st.tabs(["Article Curation", "Curated Articles"])
     
     with tab1:
         start_page()
@@ -363,7 +363,7 @@ def classifier_app_logic():
         save_data()
         
     with tab2:
-        st.header("Curated Titles")    
+        st.header("Curated Articles")    
         read_from_db()
     
 classifier_app_logic()
