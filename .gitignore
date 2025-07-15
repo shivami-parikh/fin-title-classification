@@ -16,3 +16,5 @@ __pycache__
 a.json
 .vscode
 old_code/
+.streamlit
+*.txt

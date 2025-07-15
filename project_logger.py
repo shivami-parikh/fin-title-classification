@@ -1,7 +1,7 @@
 import logging
 import os
 from datetime import datetime
-from config import LOGS_DIR, LOGGING_LEVEL
+from classifier_config import LOGS_DIR, LOGGING_LEVEL
 
 def setup_project_logger(module_name):
     """

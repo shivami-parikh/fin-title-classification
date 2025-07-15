@@ -1,26 +1,26 @@
 import openpyxl
 import csv
 import os
-import logging
 from datetime import datetime, date
 from project_logger import setup_project_logger
-from config import RAW_DATA_DIR, PROCESSED_DATA_DIR
+from classifier_config import RAW_DATA_DIR, PROCESSED_CSV_NAME, PROCESSED_DATA_DIR
 
 class ExcelProcessor:
     """
     A class to encapsulate the logic for extracting data from Excel files
     and writing it to CSV. Adheres to SOLID principles by separating concerns.
     """
-    def __init__(self, raw_data_dir=RAW_DATA_DIR, processed_data_dir=PROCESSED_DATA_DIR):
+    def __init__(self, raw_data_dir=RAW_DATA_DIR, processed_csv=PROCESSED_CSV_NAME, processed_data_dir=PROCESSED_DATA_DIR):
         """
         Initializes the ExcelProcessor with input and output directories.
 
         Args:
             raw_data_dir (str): Directory containing raw Excel files.
-            processed_data_dir (str): Directory for processed CSV outputs.
+            processed_csv (str): Directory for processed CSV outputs.
         """
         self.raw_data_dir = raw_data_dir
         self.processed_data_dir = processed_data_dir
+        self.processed_csv = processed_csv
         self.logger = setup_project_logger("excel_extraction")
         os.makedirs(self.processed_data_dir, exist_ok=True) # Ensure output dir exists
 
@@ -103,12 +103,12 @@ class ExcelProcessor:
                 # If both title and URL are empty, assume no more articles in this column
                 # This prevents processing empty rows at the end of a column block
                 if title is None and url is None:
-                    self.logger.debug(f"No more data in column for source '{source_website}' from row {row_idx}. Breaking.")
+                    # self.logger.info(f"No more data in column for source '{source_website}' from row {row_idx}. Breaking.")
                     break
 
                 is_selected = "Selected" if self._is_cell_highlighted(title_cell) else "Not Selected"
-                if is_selected == "Selected":
-                     self.logger.debug(f"Title '{title}' for '{source_website}' at row {row_idx} is selected.")
+                # if is_selected == "Selected":
+                #     self.logger.info(f"Title '{title}' for '{source_website}' at row {row_idx} is selected.")
 
 
                 if title or url: # Only add if there's at least a title or URL
@@ -119,7 +119,7 @@ class ExcelProcessor:
                         'selected': is_selected,
                         'date': sheet_name # Use sheet name as date for the record
                     })
-                    self.logger.debug(f"Extracted: '{title}' from '{source_website}' on sheet '{sheet_name}'.")
+                    # self.logger.info(f"Extracted: '{title}' from '{source_website}' on sheet '{sheet_name}'.")
         return articles
 
     def process_single_excel_file(self, excel_file_path, output_csv_file_path):
@@ -145,7 +145,7 @@ class ExcelProcessor:
         self.logger.info(f"Found {len(workbook.sheetnames)} sheets: {', '.join(workbook.sheetnames)}")
 
         for sheet_name in workbook.sheetnames:
-            self.logger.info(f"  Extracting data from sheet: '{sheet_name}'...")
+            # self.logger.info(f"  Extracting data from sheet: '{sheet_name}'...")
             sheet_data = self.extract_data_from_single_sheet(workbook, sheet_name)
             all_extracted_data.extend(sheet_data)
             self.logger.info(f"    Extracted {len(sheet_data)} entries from '{sheet_name}'.")
@@ -184,8 +184,7 @@ class ExcelProcessor:
         today_date = date.today()
         # For simplicity, all data from all Excel files processed today will go into one CSV file
         # You could modify this to create a separate CSV per Excel file if needed.
-        output_csv_file_name = f"processed_data_{today_date.strftime('%Y%m%d')}.csv"
-        output_csv_file_path = os.path.join(self.processed_data_dir, output_csv_file_name)
+        output_csv_file_path = os.path.join(self.processed_data_dir, self.processed_csv)
 
         # Remove the CSV file if it exists from a previous run on the same day
         # to prevent duplicate appending if the script is run multiple times
