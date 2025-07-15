@@ -394,6 +394,7 @@ class DataProcessor:
 
         input_data_list = self.data_loader.read_input_csv(self.input_file_path)
         
+        limit_data = 200 if limit_data is None else limit_data
         if limit_data is not None:
             input_data_list = input_data_list[:limit_data]
             self.logger.info(f"Limiting input data to {limit_data} items for testing purposes.")
