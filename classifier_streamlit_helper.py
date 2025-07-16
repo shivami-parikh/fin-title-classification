@@ -101,9 +101,9 @@ def run_classification_and_load_output(is_test, is_base_model):
     try:
         # Ensure model output directory exists and is clear for new outputs
         os.makedirs(MODEL_OUTPUT_DIR, exist_ok=True)
-        with st.spinner("Running title classification... This may take a moment."):
+        with st.spinner("Running article curation... This may take a moment."):
             process_data(is_test=is_test, is_base_model=is_base_model)
-        st.success("Title classification completed!")
+        st.success("Article curation completed!")
 
         output_csv_name = DEFAULT_MODEL_OUTPUT_CSV_NAME if is_base_model else FT_MODEL_OUTPUT_CSV_NAME
         output_file_path = os.path.join(MODEL_OUTPUT_DIR, output_csv_name)
@@ -139,12 +139,12 @@ def read_from_db():
             st.markdown("---")
             
 def handle_save_button_click():
-    with st.spinner("Saving selected title..."):
+    with st.spinner("Saving selected articles..."):
         success = save_to_database(st.session_state['edited_df'])
         if success:
-            st.success("Titles saved successfully!")
+            st.success("Articles saved successfully!")
             st.session_state['is_saved'] = True
             reset_app_state()
         else:
-            st.error("Failed to save the title. Try again later.")
+            st.error("Failed to save the articles. Try again later.")
             st.session_state['is_saved'] = False
