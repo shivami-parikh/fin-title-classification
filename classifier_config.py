@@ -18,7 +18,7 @@ LOGS_DIR = DATA_DIR / "logs"
 PROCESSED_CSV_NAME = "processed.csv"
 FT_MODEL_OUTPUT_CSV_NAME = "output.csv"
 DEFAULT_MODEL_OUTPUT_CSV_NAME = "output_default.csv"
-COLUMN_NAMES = ["Title", "User Selection", "AI Selection"]
+COLUMN_NAMES = ["Article", "User Selection", "AI Selection"]
 
 # Ensure directories exist
 DATA_DIR.mkdir(exist_ok=True)
