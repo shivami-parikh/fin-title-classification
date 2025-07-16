@@ -53,4 +53,4 @@ credentials = ServiceAccountCredentials.from_json_keyfile_dict(
 client = gspread.authorize(credentials)
 
 classifier_spreadsheet = client.open_by_key(st.secrets["google_service_account"]["classifier_spreadsheet_id"])
-classifier_worksheet = classifier_spreadsheet.worksheet("Classified Titles")
+classifier_worksheet = classifier_spreadsheet.worksheet("Curated Articles")
